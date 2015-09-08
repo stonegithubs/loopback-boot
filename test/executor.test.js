@@ -275,6 +275,47 @@ describe('executor', function() {
         done();
       }, 10);
     });
+
+  });
+
+  describe('with boot and models files with environment', function() {
+    beforeEach(function() {
+      console.log(process.bootFlags);
+      process.env.NODE_ENV = 'env';
+      boot.execute(app, simpleAppInstructions());
+    });
+
+    afterEach(function() {
+      delete process.env.NODE_ENV;
+      delete process.bootFlags;
+    });
+
+    it('should run `boot/*` files', function(done) {
+      // scripts are loaded by the order of file names
+      expect(process.bootFlags).to.eql([
+        'barLoaded',
+        'barSyncLoaded',
+        'fooLoadedInEnv',
+        'fooLoaded',
+        'barStarted'
+      ]);
+
+      // bar finished happens in the next tick
+      // barSync executed after bar finished
+      setTimeout(function() {
+        expect(process.bootFlags).to.eql([
+          'barLoaded',
+          'barSyncLoaded',
+          'fooLoadedInEnv',
+          'fooLoaded',
+          'barStarted',
+          'barFinished',
+          'barSyncExecuted'
+        ]);
+        done();
+      }, 10);
+    });
+
   });
 
   describe('with boot with callback', function() {
